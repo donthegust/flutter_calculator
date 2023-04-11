@@ -1,6 +1,3 @@
-import 'dart:developer';
-import 'dart:ffi';
-
 import 'package:calculadora_app/styles/button_styles.dart';
 import 'package:calculadora_app/styles/text_styles.dart';
 import 'package:flutter/material.dart';
@@ -14,9 +11,10 @@ class CalculatorView extends StatefulWidget {
 
 class _CalculatorViewState extends State<CalculatorView> {
   late final TextEditingController controller;
-  String operation = '';
-  List<double> nums = [];
-  String history = '';
+  final List<double> _nums = [];
+  double? _equalBuffer;
+  String _operation = '';
+  String _history = '';
 
   @override
   void initState() {
@@ -33,17 +31,17 @@ class _CalculatorViewState extends State<CalculatorView> {
     super.dispose();
   }
 
-  void fillHistory(String val) {
+  void _fillHistory(String val) {
     setState(() {
       if (val == '') {
-        history = '';
+        _history = '';
       } else {
-        history += '$val ';
+        _history += '$val ';
       }
     });
   }
 
-  void insertConsole(String num) {
+  void _insertConsole(String num) {
     var text = controller.text;
 
     if (text.length > 20) return;
@@ -69,7 +67,7 @@ class _CalculatorViewState extends State<CalculatorView> {
     //log((double.parse(controller.value.text) + double.parse(controller.value.text)).toString());
   }
 
-  void deleteConsole() {
+  void _deleteConsole() {
     var text = controller.text;
     if (text.length == 1) {
       controller.value = const TextEditingValue(
@@ -84,50 +82,101 @@ class _CalculatorViewState extends State<CalculatorView> {
     }
   }
 
-  void cleanConsole() {
+  void _cleanConsole(bool historyClean) {
+    if (historyClean) {
+      setState(() {
+        _fillHistory('');
+        _operation = '';
+        _nums.clear();
+      });
+    }
+
     controller.value = const TextEditingValue(
       text: '0',
     );
   }
 
-  void calculate() {
+  void _calculate() {
     double response = 0;
 
-    if (operation == '/' && nums[1] == 0) {
-      history = 'ERRO: Não é possível dividir por zero';
+    if (_operation == '/' && _nums[1] == 0) {
+      _nums.clear();
+      _fillHistory('');
+      _fillHistory('ERRO: Não é possível dividir por zero');
       return;
     }
 
-    switch (operation) {
+    switch (_operation) {
       case '+':
-        response = nums[0] + nums[1];
+        response = _nums[0] + _nums[1];
         break;
       case '-':
-        response = nums[0] - nums[1];
+        response = _nums[0] - _nums[1];
         break;
       case '/':
-        response = nums[0] / nums[1];
+        response = _nums[0] / _nums[1];
         break;
       case '*':
-        response = nums[0] * nums[1];
+        response = _nums[0] * _nums[1];
         break;
     }
 
-    nums.clear();
-    nums.add(response);
-    fillHistory('= $response');
+    _nums.clear();
+    _nums.add(response);
+    //_operation = '';
+    if (!response.toString().contains('.0')) {
+      _fillHistory('= $response');
+    } else {
+      _fillHistory('= ${response.toInt()}');
+    }
   }
 
-  void insertOperation(String op) {
-    fillHistory(controller.text);
-    nums.add(double.parse(controller.text));
-    fillHistory(op);
-    operation = op;
-    cleanConsole();
-    if (nums.length > 1) {
-      calculate();
+  void _insertOperation(String op) {
+    _equalBuffer = null;
+    _fillHistory(controller.text);
+
+    if (_history.contains('=')) {
+      _fillHistory('');
+      _fillHistory('${_nums[0].toString()} $op');
+      //_fillHistory(op);
+    } else {
+      _nums.add(double.parse(controller.text));
     }
-    log(nums.length.toString());
+
+    if (_operation.isEmpty) {
+      _fillHistory(op);
+    }
+    _operation = op;
+    _cleanConsole(false);
+    if (_nums.length > 1) {
+      _calculate();
+    }
+    //log(_nums.length.toString());
+  }
+
+  void _equalClick() {
+    if (_history.contains('ERRO')) {
+      _fillHistory('');
+      return;
+    }
+
+    if (_history.contains('=')) {
+      return;
+      _fillHistory('');
+      _fillHistory('${_nums[0].toInt().toString()} $_operation ${_equalBuffer.toString()}');
+      //_fillHistory(_operation);
+      _equalBuffer ??= double.parse(controller.text);
+      //_fillHistory(_equalBuffer.toString());
+      _nums.add(_equalBuffer!);
+      _cleanConsole(false);
+    } else {
+      _fillHistory(controller.text);
+      _nums.add(double.parse(controller.text));
+    }
+
+    _cleanConsole(false);
+    _calculate();
+    _nums.clear();
   }
 
   @override
@@ -150,7 +199,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     SizedBox(
                       width: MediaQuery.of(context).size.width,
                       child: Text(
-                        history,
+                        _history,
                         style: context.textStyles.textConsole.copyWith(color: Colors.white54),
                         textAlign: TextAlign.right,
                       ),
@@ -178,7 +227,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => cleanConsole(),
+                      onPressed: () => _cleanConsole(true),
                       child: Text(
                         'C',
                         style: context.textStyles.textFuncs.copyWith(fontSize: 24),
@@ -190,7 +239,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => deleteConsole(),
+                      onPressed: () => _deleteConsole(),
                       child: const Icon(
                         Icons.backspace_outlined,
                         color: Colors.black54,
@@ -202,7 +251,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertOperation('/'),
+                      onPressed: () => _insertOperation('/'),
                       child: Text(
                         '/',
                         style: context.textStyles.textFuncs,
@@ -214,7 +263,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertOperation('*'),
+                      onPressed: () => _insertOperation('*'),
                       child: Text(
                         '*',
                         style: context.textStyles.textFuncs,
@@ -230,7 +279,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertConsole('7'),
+                      onPressed: () => _insertConsole('7'),
                       child: Text(
                         '7',
                         style: context.textStyles.textNums,
@@ -242,7 +291,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertConsole('8'),
+                      onPressed: () => _insertConsole('8'),
                       child: Text(
                         '8',
                         style: context.textStyles.textNums,
@@ -254,7 +303,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertConsole('9'),
+                      onPressed: () => _insertConsole('9'),
                       child: Text(
                         '9',
                         style: context.textStyles.textNums,
@@ -266,7 +315,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertOperation('-'),
+                      onPressed: () => _insertOperation('-'),
                       child: Text(
                         '-',
                         style: context.textStyles.textFuncs,
@@ -282,7 +331,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertConsole('4'),
+                      onPressed: () => _insertConsole('4'),
                       child: Text(
                         '4',
                         style: context.textStyles.textNums,
@@ -294,7 +343,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertConsole('5'),
+                      onPressed: () => _insertConsole('5'),
                       child: Text(
                         '5',
                         style: context.textStyles.textNums,
@@ -306,7 +355,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertConsole('6'),
+                      onPressed: () => _insertConsole('6'),
                       child: Text(
                         '6',
                         style: context.textStyles.textNums,
@@ -318,7 +367,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: btnWidth,
                     child: ElevatedButton(
-                      onPressed: () => insertOperation('+'),
+                      onPressed: () => _insertOperation('+'),
                       child: Text(
                         '+',
                         style: context.textStyles.textFuncs,
@@ -338,7 +387,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                             width: btnWidth,
                             height: btnWidth,
                             child: ElevatedButton(
-                              onPressed: () => insertConsole('1'),
+                              onPressed: () => _insertConsole('1'),
                               child: Text(
                                 '1',
                                 style: context.textStyles.textNums,
@@ -350,7 +399,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                             width: btnWidth,
                             height: btnWidth,
                             child: ElevatedButton(
-                              onPressed: () => insertConsole('2'),
+                              onPressed: () => _insertConsole('2'),
                               child: Text(
                                 '2',
                                 style: context.textStyles.textNums,
@@ -362,7 +411,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                             width: btnWidth,
                             height: btnWidth,
                             child: ElevatedButton(
-                              onPressed: () => insertConsole('3'),
+                              onPressed: () => _insertConsole('3'),
                               child: Text(
                                 '3',
                                 style: context.textStyles.textNums,
@@ -378,7 +427,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                             width: (btnWidth) * 2,
                             height: btnWidth,
                             child: ElevatedButton(
-                              onPressed: () => insertConsole('0'),
+                              onPressed: () => _insertConsole('0'),
                               child: Text(
                                 '0',
                                 style: context.textStyles.textNums,
@@ -390,7 +439,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                             width: btnWidth,
                             height: btnWidth,
                             child: ElevatedButton(
-                              onPressed: () => insertConsole('.'),
+                              onPressed: () => _insertConsole('.'),
                               child: Text(
                                 ',',
                                 style: context.textStyles.textNums,
@@ -406,7 +455,7 @@ class _CalculatorViewState extends State<CalculatorView> {
                     width: btnWidth,
                     height: (btnWidth) * 2,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () => _equalClick(),
                       child: Text(
                         '=',
                         style: context.textStyles.textEqual,
