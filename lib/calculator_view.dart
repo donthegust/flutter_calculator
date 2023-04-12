@@ -14,7 +14,6 @@ class CalculatorView extends StatefulWidget {
 class _CalculatorViewState extends State<CalculatorView> {
   late final TextEditingController controller;
   final List<double> _nums = [];
-  double _equalBuffer = 0;
   String _operation = '';
   String _history = '';
 
@@ -93,9 +92,11 @@ class _CalculatorViewState extends State<CalculatorView> {
   void _cleanConsole(bool historyClean) {
     if (historyClean) {
       //Limpa todo o console caso necessario
-      _fillHistory('');
-      _operation = '';
-      _nums.clear();
+      setState(() {
+        _fillHistory('');
+        _operation = '';
+        _nums.clear();
+      });
     }
 
     controller.value = const TextEditingValue(
@@ -136,7 +137,6 @@ class _CalculatorViewState extends State<CalculatorView> {
 
     _nums.clear();
     _nums.add(response); //Limpa a lista de numeros e adiciona o resultado do calculo na lista
-    //_operation = '';
     if (_floatCheck(response.toString())) {
       _fillHistory('= $response'); //Adiciona o resultado a tela
     } else {
@@ -151,29 +151,13 @@ class _CalculatorViewState extends State<CalculatorView> {
       return;
     }
 
-    //_equalBuffer = 0; //TODO Verificar a permanencia dessa var
     _fillHistory(controller.text);
 
     if (_history.contains('=')) {
       //Reaproveita o resultado anterior e insere um novo operador junto com o valor do console
       _fillHistory('');
-      log(_nums.toString());
 
-      _nums.insert(1, double.parse(controller.text));
-      //_nums.add();
-      _fillHistory('${_nums[0].toString()} $op ${_nums[1].toString()}');
-
-      // if (_floatCheck(_nums[0].toString())) {
-      //   _fillHistory('${_nums[0].toString()} $op'); //Adiciona o resultado a tela
-      // } else {
-      //   _fillHistory('${_nums[0].toInt().toString()} $op');
-      // }
-
-      // if (_floatCheck(_nums[1].toString())) {
-      //   _fillHistory('${_nums[1].toString()} $op'); //Adiciona o resultado a tela
-      // } else {
-      //   _fillHistory('${_nums[1].toInt().toString()} $op');
-      // }
+      _fillHistory('${_nums[0].toString()} $op');
     } else {
       _nums.add(double.parse(controller.text)); // Adiciona um valor novo valor na Lista
     }
@@ -186,7 +170,6 @@ class _CalculatorViewState extends State<CalculatorView> {
       //Substitui a operação da tela
       _operation = op;
       _fillHistory('');
-      //_fillHistory('${_nums[0].toString()} $op');
       if (_floatCheck(_nums[0].toString())) {
         _fillHistory('${_nums[0].toString()} $op'); //Adiciona o resultado a tela
       } else {
@@ -196,12 +179,6 @@ class _CalculatorViewState extends State<CalculatorView> {
     }
 
     _cleanConsole(false); //Limpa o console
-    if (_nums.length > 1) {
-      //Executa o calculo caso exista mais de um numero na Lista
-      _calculate();
-      //_equalBuffer = _nums[0];
-    }
-    //log(_nums.length.toString());
   }
 
   void _equalClick() {
@@ -213,29 +190,32 @@ class _CalculatorViewState extends State<CalculatorView> {
 
     if (_history.contains('=')) {
       //Verifica se o ultimo clique foi no '='
-      //return;
       _fillHistory('');
-      _fillHistory('${_nums[0].toString()} $_operation ${controller.text}');
-      //_fillHistory(_operation);
-      //_equalBuffer ??= double.parse(controller.text);
-      //_fillHistory(_equalBuffer.toString());
-      log('aqui 1');
-      //_nums.add(double.parse(controller.text));
+
       _nums.insert(1, double.parse(controller.text));
-      log('aqui 2');
+
+      if (_floatCheck(_nums[0].toString())) {
+        _fillHistory('${_nums[0].toString()} $_operation');
+      } else {
+        _fillHistory('${_nums[0].toInt().toString()} $_operation');
+      }
+
+      if (_floatCheck(_nums[1].toString())) {
+        _fillHistory(_nums[1].toString());
+      } else {
+        _fillHistory(_nums[1].toInt().toString());
+      }
     } else {
       if (_operation.isEmpty) {
         //Valida se o calculo é possivel
         return;
       }
-      //_nums.add(double.parse(controller.text));
       _nums.insert(1, double.parse(controller.text));
       _fillHistory(controller.text);
     }
 
     _cleanConsole(false);
     _calculate();
-    //_nums.clear();
   }
 
   @override
@@ -266,11 +246,8 @@ class _CalculatorViewState extends State<CalculatorView> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: controller,
-                      //obscureText: true,
-                      //maxLength: 30,
                       textAlign: TextAlign.right,
                       readOnly: true,
-                      //decoration: InputDecoration(focusColor: null),
                       style: context.textStyles.textConsole,
                     ),
                   ],
