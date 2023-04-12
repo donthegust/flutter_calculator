@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:calculadora_app/styles/button_styles.dart';
 import 'package:calculadora_app/styles/text_styles.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,7 @@ class CalculatorView extends StatefulWidget {
 class _CalculatorViewState extends State<CalculatorView> {
   late final TextEditingController controller;
   final List<double> _nums = [];
-  double? _equalBuffer;
+  double _equalBuffer = 0;
   String _operation = '';
   String _history = '';
 
@@ -41,25 +43,29 @@ class _CalculatorViewState extends State<CalculatorView> {
     });
   }
 
-  void _insertConsole(String num) {
+  void _insertConsole(String val) {
     var text = controller.text;
 
-    if (text.length > 20) return;
+    if (text.length > 20) return; //Caso seja inserido valor com mais de 20 digitos
     if (text == '0') {
+      //Retira o '0' inicial do console
       text = '';
     }
-    if (num != '.') {
+    if (val != '.') {
+      //Verifica se o valor a ser inserido não é um .
       controller.value = TextEditingValue(
-        text: text + num,
+        text: text + val,
       );
     } else {
       if (text.isEmpty) {
+        //Insere '0' antes do . se for preciso
         controller.value = TextEditingValue(
-          text: '0$num',
+          text: '0$val',
         );
       } else if (!text.contains('.')) {
+        //Insere o ponto no console
         controller.value = TextEditingValue(
-          text: text + num,
+          text: text + val,
         );
       }
     }
@@ -70,11 +76,13 @@ class _CalculatorViewState extends State<CalculatorView> {
   void _deleteConsole() {
     var text = controller.text;
     if (text.length == 1) {
+      //Insere um zero caso todos os digitos inseridos tenham sido deletados
       controller.value = const TextEditingValue(
         text: '0',
       );
     } else {
       if (text.isNotEmpty) {
+        //Elimina o ultimo digito da String atual do console
         controller.value = TextEditingValue(
           text: text.substring(0, text.length - 1),
         );
@@ -84,11 +92,10 @@ class _CalculatorViewState extends State<CalculatorView> {
 
   void _cleanConsole(bool historyClean) {
     if (historyClean) {
-      setState(() {
-        _fillHistory('');
-        _operation = '';
-        _nums.clear();
-      });
+      //Limpa todo o console caso necessario
+      _fillHistory('');
+      _operation = '';
+      _nums.clear();
     }
 
     controller.value = const TextEditingValue(
@@ -96,10 +103,15 @@ class _CalculatorViewState extends State<CalculatorView> {
     );
   }
 
+  bool _floatCheck(String val) {
+    return int.parse(val.toString().split('.')[1]) != 0;
+  }
+
   void _calculate() {
     double response = 0;
 
     if (_operation == '/' && _nums[1] == 0) {
+      //Checa se o calculo é uma divisão possivel
       _nums.clear();
       _fillHistory('');
       _fillHistory('ERRO: Não é possível dividir por zero');
@@ -107,6 +119,7 @@ class _CalculatorViewState extends State<CalculatorView> {
     }
 
     switch (_operation) {
+      //Realiza o calculo
       case '+':
         response = _nums[0] + _nums[1];
         break;
@@ -122,61 +135,107 @@ class _CalculatorViewState extends State<CalculatorView> {
     }
 
     _nums.clear();
-    _nums.add(response);
+    _nums.add(response); //Limpa a lista de numeros e adiciona o resultado do calculo na lista
     //_operation = '';
-    if (!response.toString().contains('.0')) {
-      _fillHistory('= $response');
+    if (_floatCheck(response.toString())) {
+      _fillHistory('= $response'); //Adiciona o resultado a tela
     } else {
       _fillHistory('= ${response.toInt()}');
     }
   }
 
   void _insertOperation(String op) {
-    _equalBuffer = null;
+    if (_history.contains('ERRO')) {
+      //Se houver erro no console, limpa ele
+      _fillHistory('');
+      return;
+    }
+
+    //_equalBuffer = 0; //TODO Verificar a permanencia dessa var
     _fillHistory(controller.text);
 
     if (_history.contains('=')) {
+      //Reaproveita o resultado anterior e insere um novo operador junto com o valor do console
       _fillHistory('');
-      _fillHistory('${_nums[0].toString()} $op');
-      //_fillHistory(op);
+      log(_nums.toString());
+
+      _nums.insert(1, double.parse(controller.text));
+      //_nums.add();
+      _fillHistory('${_nums[0].toString()} $op ${_nums[1].toString()}');
+
+      // if (_floatCheck(_nums[0].toString())) {
+      //   _fillHistory('${_nums[0].toString()} $op'); //Adiciona o resultado a tela
+      // } else {
+      //   _fillHistory('${_nums[0].toInt().toString()} $op');
+      // }
+
+      // if (_floatCheck(_nums[1].toString())) {
+      //   _fillHistory('${_nums[1].toString()} $op'); //Adiciona o resultado a tela
+      // } else {
+      //   _fillHistory('${_nums[1].toInt().toString()} $op');
+      // }
     } else {
-      _nums.add(double.parse(controller.text));
+      _nums.add(double.parse(controller.text)); // Adiciona um valor novo valor na Lista
     }
 
     if (_operation.isEmpty) {
+      //Insere a operação na tela
+      _operation = op;
       _fillHistory(op);
+    } else {
+      //Substitui a operação da tela
+      _operation = op;
+      _fillHistory('');
+      //_fillHistory('${_nums[0].toString()} $op');
+      if (_floatCheck(_nums[0].toString())) {
+        _fillHistory('${_nums[0].toString()} $op'); //Adiciona o resultado a tela
+      } else {
+        _fillHistory('${_nums[0].toInt().toString()} $op');
+      }
+      return;
     }
-    _operation = op;
-    _cleanConsole(false);
+
+    _cleanConsole(false); //Limpa o console
     if (_nums.length > 1) {
+      //Executa o calculo caso exista mais de um numero na Lista
       _calculate();
+      //_equalBuffer = _nums[0];
     }
     //log(_nums.length.toString());
   }
 
   void _equalClick() {
     if (_history.contains('ERRO')) {
+      //Se houver erro no console, limpa ele
       _fillHistory('');
       return;
     }
 
     if (_history.contains('=')) {
-      return;
+      //Verifica se o ultimo clique foi no '='
+      //return;
       _fillHistory('');
-      _fillHistory('${_nums[0].toInt().toString()} $_operation ${_equalBuffer.toString()}');
+      _fillHistory('${_nums[0].toString()} $_operation ${controller.text}');
       //_fillHistory(_operation);
-      _equalBuffer ??= double.parse(controller.text);
+      //_equalBuffer ??= double.parse(controller.text);
       //_fillHistory(_equalBuffer.toString());
-      _nums.add(_equalBuffer!);
-      _cleanConsole(false);
+      log('aqui 1');
+      //_nums.add(double.parse(controller.text));
+      _nums.insert(1, double.parse(controller.text));
+      log('aqui 2');
     } else {
+      if (_operation.isEmpty) {
+        //Valida se o calculo é possivel
+        return;
+      }
+      //_nums.add(double.parse(controller.text));
+      _nums.insert(1, double.parse(controller.text));
       _fillHistory(controller.text);
-      _nums.add(double.parse(controller.text));
     }
 
     _cleanConsole(false);
     _calculate();
-    _nums.clear();
+    //_nums.clear();
   }
 
   @override
