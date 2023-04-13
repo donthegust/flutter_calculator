@@ -1,16 +1,33 @@
-# calculadora_app
+# Calculadora em Flutter
 
-A new Flutter project.
+### Trabalho apresentado como requisito de avaliação da disciplina de Programação para Dispositivos Móveis do curso de Tecnologia em Análise e Desenvolvimento de Sistemas do Instituto Federal de São Paulo
 
-## Getting Started
+<br>
 
-This project is a starting point for a Flutter application.
+### **Como executar**
 
-A few resources to get you started if this is your first Flutter project:
+Clone o repositório
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```sh
+git clone git@github.com:donthegust/flutter_calculator.git
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Abra o diretório e instale todas as dependências com
+
+```sh
+cd flutter_calculator
+flutter pub get
+```
+
+Execute o projeto com
+
+```sh
+flutter run
+```
+
+Ou caso queira, abra o código para explora-lo com
+
+```sh
+code .
+```
+_Comando **code** funciona apenas se o VSCode estiver instalado_
