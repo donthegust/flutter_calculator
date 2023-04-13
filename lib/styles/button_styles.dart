@@ -16,12 +16,12 @@ class ButtonStyles {
           Color(0xFFee9b00),
         ),
         overlayColor: MaterialStatePropertyAll(Colors.white38),
-        elevation: MaterialStatePropertyAll(3),
+        //elevation: MaterialStatePropertyAll(3),
       );
 
   ButtonStyle get buttonNums => ButtonStyle(
         backgroundColor: MaterialStatePropertyAll(
-          const Color(0xFFF023047).withOpacity(0.4),
+          const Color(0xff023047).withOpacity(0.4),
         ),
         overlayColor: const MaterialStatePropertyAll(Colors.white38),
       );

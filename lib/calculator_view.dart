@@ -1,7 +1,6 @@
-import 'dart:developer';
-
-import 'package:calculadora_app/styles/button_styles.dart';
+import 'package:calculadora_app/controller/console_controller.dart';
 import 'package:calculadora_app/styles/text_styles.dart';
+import 'package:calculadora_app/widgets/base_button.dart';
 import 'package:flutter/material.dart';
 
 class CalculatorView extends StatefulWidget {
@@ -12,216 +11,20 @@ class CalculatorView extends StatefulWidget {
 }
 
 class _CalculatorViewState extends State<CalculatorView> {
-  late final TextEditingController controller;
-  final List<double> _nums = [];
-  String _operation = '';
-  String _history = '';
-
   @override
   void initState() {
-    controller = TextEditingController();
-    controller.value = const TextEditingValue(
-      text: '0',
-    );
+    ConsoleController.i.controller = TextEditingController();
     super.initState();
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    ConsoleController.i.controller.dispose();
     super.dispose();
-  }
-
-  void _fillHistory(String val) {
-    setState(() {
-      if (val == '') {
-        _history = '';
-      } else {
-        _history += '$val ';
-      }
-    });
-  }
-
-  void _insertConsole(String val) {
-    var text = controller.text;
-
-    if (text.length > 20) return; //Caso seja inserido valor com mais de 20 digitos
-    if (text == '0') {
-      //Retira o '0' inicial do console
-      text = '';
-    }
-    if (val != '.') {
-      //Verifica se o valor a ser inserido não é um .
-      controller.value = TextEditingValue(
-        text: text + val,
-      );
-    } else {
-      if (text.isEmpty) {
-        //Insere '0' antes do . se for preciso
-        controller.value = TextEditingValue(
-          text: '0$val',
-        );
-      } else if (!text.contains('.')) {
-        //Insere o ponto no console
-        controller.value = TextEditingValue(
-          text: text + val,
-        );
-      }
-    }
-
-    //log((double.parse(controller.value.text) + double.parse(controller.value.text)).toString());
-  }
-
-  void _deleteConsole() {
-    var text = controller.text;
-    if (text.length == 1) {
-      //Insere um zero caso todos os digitos inseridos tenham sido deletados
-      controller.value = const TextEditingValue(
-        text: '0',
-      );
-    } else {
-      if (text.isNotEmpty) {
-        //Elimina o ultimo digito da String atual do console
-        controller.value = TextEditingValue(
-          text: text.substring(0, text.length - 1),
-        );
-      }
-    }
-  }
-
-  void _cleanConsole(bool historyClean) {
-    if (historyClean) {
-      //Limpa todo o console caso necessario
-      setState(() {
-        _fillHistory('');
-        _operation = '';
-        _nums.clear();
-      });
-    }
-
-    controller.value = const TextEditingValue(
-      text: '0',
-    );
-  }
-
-  bool _floatCheck(String val) {
-    return int.parse(val.toString().split('.')[1]) != 0;
-  }
-
-  void _calculate() {
-    double response = 0;
-
-    if (_operation == '/' && _nums[1] == 0) {
-      //Checa se o calculo é uma divisão possivel
-      _nums.clear();
-      _fillHistory('');
-      _fillHistory('ERRO: Não é possível dividir por zero');
-      return;
-    }
-
-    switch (_operation) {
-      //Realiza o calculo
-      case '+':
-        response = _nums[0] + _nums[1];
-        break;
-      case '-':
-        response = _nums[0] - _nums[1];
-        break;
-      case '/':
-        response = _nums[0] / _nums[1];
-        break;
-      case '*':
-        response = _nums[0] * _nums[1];
-        break;
-    }
-
-    _nums.clear();
-    _nums.add(response); //Limpa a lista de numeros e adiciona o resultado do calculo na lista
-    if (_floatCheck(response.toString())) {
-      _fillHistory('= $response'); //Adiciona o resultado a tela
-    } else {
-      _fillHistory('= ${response.toInt()}');
-    }
-  }
-
-  void _insertOperation(String op) {
-    if (_history.contains('ERRO')) {
-      //Se houver erro no console, limpa ele
-      _fillHistory('');
-      return;
-    }
-
-    _fillHistory(controller.text);
-
-    if (_history.contains('=')) {
-      //Reaproveita o resultado anterior e insere um novo operador junto com o valor do console
-      _fillHistory('');
-
-      _fillHistory('${_nums[0].toString()} $op');
-    } else {
-      _nums.add(double.parse(controller.text)); // Adiciona um valor novo valor na Lista
-    }
-
-    if (_operation.isEmpty) {
-      //Insere a operação na tela
-      _operation = op;
-      _fillHistory(op);
-    } else {
-      //Substitui a operação da tela
-      _operation = op;
-      _fillHistory('');
-      if (_floatCheck(_nums[0].toString())) {
-        _fillHistory('${_nums[0].toString()} $op'); //Adiciona o resultado a tela
-      } else {
-        _fillHistory('${_nums[0].toInt().toString()} $op');
-      }
-      return;
-    }
-
-    _cleanConsole(false); //Limpa o console
-  }
-
-  void _equalClick() {
-    if (_history.contains('ERRO')) {
-      //Se houver erro no console, limpa ele
-      _fillHistory('');
-      return;
-    }
-
-    if (_history.contains('=')) {
-      //Verifica se o ultimo clique foi no '='
-      _fillHistory('');
-
-      _nums.insert(1, double.parse(controller.text));
-
-      if (_floatCheck(_nums[0].toString())) {
-        _fillHistory('${_nums[0].toString()} $_operation');
-      } else {
-        _fillHistory('${_nums[0].toInt().toString()} $_operation');
-      }
-
-      if (_floatCheck(_nums[1].toString())) {
-        _fillHistory(_nums[1].toString());
-      } else {
-        _fillHistory(_nums[1].toInt().toString());
-      }
-    } else {
-      if (_operation.isEmpty) {
-        //Valida se o calculo é possivel
-        return;
-      }
-      _nums.insert(1, double.parse(controller.text));
-      _fillHistory(controller.text);
-    }
-
-    _cleanConsole(false);
-    _calculate();
   }
 
   @override
   Widget build(BuildContext context) {
-    final double btnWidth = MediaQuery.of(context).size.width / 4;
-
     return Scaffold(
       body: Column(
         children: [
@@ -238,14 +41,14 @@ class _CalculatorViewState extends State<CalculatorView> {
                     SizedBox(
                       width: MediaQuery.of(context).size.width,
                       child: Text(
-                        _history,
+                        ConsoleController.i.getHistory,
                         style: context.textStyles.textConsole.copyWith(color: Colors.white54),
                         textAlign: TextAlign.right,
                       ),
                     ),
                     const SizedBox(height: 20),
                     TextField(
-                      controller: controller,
+                      controller: ConsoleController.i.controller,
                       textAlign: TextAlign.right,
                       readOnly: true,
                       style: context.textStyles.textConsole,
@@ -259,157 +62,85 @@ class _CalculatorViewState extends State<CalculatorView> {
             children: [
               Row(
                 children: [
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _cleanConsole(true),
-                      child: Text(
-                        'C',
-                        style: context.textStyles.textFuncs.copyWith(fontSize: 24),
-                      ),
-                      style: context.buttonStyles.buttonFuncs,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: 'C',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.cleanConsole(true);
+                    }),
+                    typeButton: 'FUNCS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _deleteConsole(),
-                      child: const Icon(
-                        Icons.backspace_outlined,
-                        color: Colors.black54,
-                      ),
-                      style: context.buttonStyles.buttonFuncs,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: Icons.backspace_outlined,
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.deleteConsole();
+                    }),
+                    typeButton: 'FUNCS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertOperation('/'),
-                      child: Text(
-                        '/',
-                        style: context.textStyles.textFuncs,
-                      ),
-                      style: context.buttonStyles.buttonFuncs,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '/',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.insertOperation('/');
+                    }),
+                    typeButton: 'FUNCS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertOperation('*'),
-                      child: Text(
-                        '*',
-                        style: context.textStyles.textFuncs,
-                      ),
-                      style: context.buttonStyles.buttonFuncs,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '*',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.insertOperation('*');
+                    }),
+                    typeButton: 'FUNCS',
                   ),
                 ],
               ),
               Row(
                 children: [
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertConsole('7'),
-                      child: Text(
-                        '7',
-                        style: context.textStyles.textNums,
-                      ),
-                      style: context.buttonStyles.buttonNums,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '7',
+                    onPressFunc: () => ConsoleController.i.insertConsole('7'),
+                    typeButton: 'NUMS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertConsole('8'),
-                      child: Text(
-                        '8',
-                        style: context.textStyles.textNums,
-                      ),
-                      style: context.buttonStyles.buttonNums,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '8',
+                    onPressFunc: () => ConsoleController.i.insertConsole('8'),
+                    typeButton: 'NUMS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertConsole('9'),
-                      child: Text(
-                        '9',
-                        style: context.textStyles.textNums,
-                      ),
-                      style: context.buttonStyles.buttonNums,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '9',
+                    onPressFunc: () => ConsoleController.i.insertConsole('9'),
+                    typeButton: 'NUMS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertOperation('-'),
-                      child: Text(
-                        '-',
-                        style: context.textStyles.textFuncs,
-                      ),
-                      style: context.buttonStyles.buttonFuncs,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '-',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.insertOperation('-');
+                    }),
+                    typeButton: 'FUNCS',
                   ),
                 ],
               ),
               Row(
                 children: [
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertConsole('4'),
-                      child: Text(
-                        '4',
-                        style: context.textStyles.textNums,
-                      ),
-                      style: context.buttonStyles.buttonNums,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '4',
+                    onPressFunc: () => ConsoleController.i.insertConsole('4'),
+                    typeButton: 'NUMS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertConsole('5'),
-                      child: Text(
-                        '5',
-                        style: context.textStyles.textNums,
-                      ),
-                      style: context.buttonStyles.buttonNums,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '5',
+                    onPressFunc: () => ConsoleController.i.insertConsole('5'),
+                    typeButton: 'NUMS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertConsole('6'),
-                      child: Text(
-                        '6',
-                        style: context.textStyles.textNums,
-                      ),
-                      style: context.buttonStyles.buttonNums,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '6',
+                    onPressFunc: () => ConsoleController.i.insertConsole('6'),
+                    typeButton: 'NUMS',
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: btnWidth,
-                    child: ElevatedButton(
-                      onPressed: () => _insertOperation('+'),
-                      child: Text(
-                        '+',
-                        style: context.textStyles.textFuncs,
-                      ),
-                      style: context.buttonStyles.buttonFuncs,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '+',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.insertOperation('+');
+                    }),
+                    typeButton: 'FUNCS',
                   ),
                 ],
               ),
@@ -419,85 +150,47 @@ class _CalculatorViewState extends State<CalculatorView> {
                     children: [
                       Row(
                         children: [
-                          SizedBox(
-                            width: btnWidth,
-                            height: btnWidth,
-                            child: ElevatedButton(
-                              onPressed: () => _insertConsole('1'),
-                              child: Text(
-                                '1',
-                                style: context.textStyles.textNums,
-                              ),
-                              style: context.buttonStyles.buttonNums,
-                            ),
+                          CalculatorBaseButton(
+                            btnContent: '1',
+                            onPressFunc: () => ConsoleController.i.insertConsole('1'),
+                            typeButton: 'NUMS',
                           ),
-                          SizedBox(
-                            width: btnWidth,
-                            height: btnWidth,
-                            child: ElevatedButton(
-                              onPressed: () => _insertConsole('2'),
-                              child: Text(
-                                '2',
-                                style: context.textStyles.textNums,
-                              ),
-                              style: context.buttonStyles.buttonNums,
-                            ),
+                          CalculatorBaseButton(
+                            btnContent: '2',
+                            onPressFunc: () => ConsoleController.i.insertConsole('2'),
+                            typeButton: 'NUMS',
                           ),
-                          SizedBox(
-                            width: btnWidth,
-                            height: btnWidth,
-                            child: ElevatedButton(
-                              onPressed: () => _insertConsole('3'),
-                              child: Text(
-                                '3',
-                                style: context.textStyles.textNums,
-                              ),
-                              style: context.buttonStyles.buttonNums,
-                            ),
+                          CalculatorBaseButton(
+                            btnContent: '3',
+                            onPressFunc: () => ConsoleController.i.insertConsole('3'),
+                            typeButton: 'NUMS',
                           ),
                         ],
                       ),
                       Row(
                         children: [
-                          SizedBox(
-                            width: (btnWidth) * 2,
-                            height: btnWidth,
-                            child: ElevatedButton(
-                              onPressed: () => _insertConsole('0'),
-                              child: Text(
-                                '0',
-                                style: context.textStyles.textNums,
-                              ),
-                              style: context.buttonStyles.buttonNums,
-                            ),
+                          CalculatorBaseButton(
+                            btnContent: '0',
+                            onPressFunc: () => ConsoleController.i.insertConsole('0'),
+                            typeButton: 'NUMS',
+                            btnFlexWidth: 2,
                           ),
-                          SizedBox(
-                            width: btnWidth,
-                            height: btnWidth,
-                            child: ElevatedButton(
-                              onPressed: () => _insertConsole('.'),
-                              child: Text(
-                                ',',
-                                style: context.textStyles.textNums,
-                              ),
-                              style: context.buttonStyles.buttonNums,
-                            ),
+                          CalculatorBaseButton(
+                            btnContent: '.',
+                            onPressFunc: () => ConsoleController.i.insertConsole('.'),
+                            typeButton: 'NUMS',
                           ),
                         ],
                       ),
                     ],
                   ),
-                  SizedBox(
-                    width: btnWidth,
-                    height: (btnWidth) * 2,
-                    child: ElevatedButton(
-                      onPressed: () => _equalClick(),
-                      child: Text(
-                        '=',
-                        style: context.textStyles.textEqual,
-                      ),
-                      style: context.buttonStyles.buttonEqual,
-                    ),
+                  CalculatorBaseButton(
+                    btnContent: '=',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.equalClick();
+                    }),
+                    typeButton: 'EQUAL',
+                    btnFlexHeight: 2,
                   ),
                 ],
               )
