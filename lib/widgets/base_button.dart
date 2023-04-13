@@ -38,13 +38,17 @@ class CalculatorBaseButton extends StatelessWidget {
         break;
       default:
     }
-    return SizedBox(
+    return Container(
       width: btnFlexWidth != null
           ? (MediaQuery.of(context).size.width / 4) * btnFlexWidth!
           : (MediaQuery.of(context).size.width / 4),
       height: btnFlexHeight != null
           ? (MediaQuery.of(context).size.width / 4) * btnFlexHeight!
           : (MediaQuery.of(context).size.width / 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.white.withAlpha(20)),
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: ElevatedButton(
         onPressed: onPressFunc,
         style: btnStyle,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ConsoleController extends ChangeNotifier {
+class ConsoleController {
   late final TextEditingController controller;
   final List<double> _nums = [];
   String _operation = '';
@@ -12,21 +12,24 @@ class ConsoleController extends ChangeNotifier {
 
   void fillHistory(String val) {
     if (val == '') {
+      //Limpa o histórico do console
       _history = '';
     } else {
+      //Insere valores no histórico
       _history += '$val ';
     }
-    notifyListeners();
   }
 
   void insertConsole(String val) {
     var text = controller.text;
 
     if (text.length > 20) return; //Caso seja inserido valor com mais de 20 digitos
+
     if (text == '0') {
       //Retira o '0' inicial do console
       text = '';
     }
+
     if (val != '.') {
       //Verifica se o valor a ser inserido não é um .
       controller.value = TextEditingValue(
@@ -68,20 +71,38 @@ class ConsoleController extends ChangeNotifier {
 
   void cleanConsole(bool historyClean) {
     if (historyClean) {
-      //Limpa todo o console caso necessario
+      //Reinicia todo o console e variaveis caso necessario
       fillHistory('');
       _operation = '';
       _nums.clear();
-      notifyListeners();
     }
 
+    //Limpa o console
     controller.value = const TextEditingValue(
       text: '0',
     );
   }
 
   bool floatCheck(String val) {
+    //Verifica de o valor é um float ou int
     return int.parse(val.toString().split('.')[1]) != 0;
+  }
+
+  void percentValue() {
+    var text = controller.text;
+    if (_nums.isEmpty) {
+      //Trasforma o valor do console em porcentagem
+      text = (double.parse(text) / 100).toString();
+      controller.value = TextEditingValue(
+        text: text,
+      );
+    } else {
+      //Insere a porcetagem solicitada do valor um no console
+      double response = (_nums[0] / 100) * double.parse(text);
+      controller.value = TextEditingValue(
+        text: response.toString(),
+      );
+    }
   }
 
   void calculate() {
@@ -114,7 +135,8 @@ class ConsoleController extends ChangeNotifier {
     _nums.clear();
     _nums.add(response); //Limpa a lista de numeros e adiciona o resultado do calculo na lista
     if (floatCheck(response.toString())) {
-      fillHistory('= $response'); //Adiciona o resultado a tela
+      //Adiciona o resultado a tela
+      fillHistory('= $response');
     } else {
       fillHistory('= ${response.toInt()}');
     }
@@ -132,10 +154,10 @@ class ConsoleController extends ChangeNotifier {
     if (_history.contains('=')) {
       //Reaproveita o resultado anterior e insere um novo operador junto com o valor do console
       fillHistory('');
-
       fillHistory('${_nums[0].toString()} $op');
     } else {
-      _nums.add(double.parse(controller.text)); // Adiciona um valor novo valor na Lista
+      // Adiciona um valor novo valor na Lista
+      _nums.add(double.parse(controller.text));
     }
 
     if (_operation.isEmpty) {
@@ -147,10 +169,12 @@ class ConsoleController extends ChangeNotifier {
       _operation = op;
       fillHistory('');
       if (floatCheck(_nums[0].toString())) {
-        fillHistory('${_nums[0].toString()} $op'); //Adiciona o resultado a tela
+        //Adiciona o resultado a tela
+        fillHistory('${_nums[0].toString()} $op');
       } else {
         fillHistory('${_nums[0].toInt().toString()} $op');
       }
+      cleanConsole(false);
       return;
     }
 
@@ -193,6 +217,4 @@ class ConsoleController extends ChangeNotifier {
     cleanConsole(false);
     calculate();
   }
-
-  //notifyChange();
 }

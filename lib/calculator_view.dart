@@ -47,11 +47,15 @@ class _CalculatorViewState extends State<CalculatorView> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    TextField(
-                      controller: ConsoleController.i.controller,
-                      textAlign: TextAlign.right,
-                      readOnly: true,
-                      style: context.textStyles.textConsole,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: TextField(
+                        controller: ConsoleController.i.controller,
+                        textAlign: TextAlign.right,
+                        readOnly: true,
+                        style: context.textStyles.textConsole,
+                        decoration: null,
+                      ),
                     ),
                   ],
                 ),
@@ -70,6 +74,13 @@ class _CalculatorViewState extends State<CalculatorView> {
                     typeButton: 'FUNCS',
                   ),
                   CalculatorBaseButton(
+                    btnContent: '%',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.percentValue();
+                    }),
+                    typeButton: 'FUNCS',
+                  ),
+                  CalculatorBaseButton(
                     btnContent: Icons.backspace_outlined,
                     onPressFunc: () => setState(() {
                       ConsoleController.i.deleteConsole();
@@ -80,13 +91,6 @@ class _CalculatorViewState extends State<CalculatorView> {
                     btnContent: '/',
                     onPressFunc: () => setState(() {
                       ConsoleController.i.insertOperation('/');
-                    }),
-                    typeButton: 'FUNCS',
-                  ),
-                  CalculatorBaseButton(
-                    btnContent: '*',
-                    onPressFunc: () => setState(() {
-                      ConsoleController.i.insertOperation('*');
                     }),
                     typeButton: 'FUNCS',
                   ),
@@ -110,9 +114,9 @@ class _CalculatorViewState extends State<CalculatorView> {
                     typeButton: 'NUMS',
                   ),
                   CalculatorBaseButton(
-                    btnContent: '-',
+                    btnContent: '*',
                     onPressFunc: () => setState(() {
-                      ConsoleController.i.insertOperation('-');
+                      ConsoleController.i.insertOperation('*');
                     }),
                     typeButton: 'FUNCS',
                   ),
@@ -136,6 +140,32 @@ class _CalculatorViewState extends State<CalculatorView> {
                     typeButton: 'NUMS',
                   ),
                   CalculatorBaseButton(
+                    btnContent: '-',
+                    onPressFunc: () => setState(() {
+                      ConsoleController.i.insertOperation('-');
+                    }),
+                    typeButton: 'FUNCS',
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  CalculatorBaseButton(
+                    btnContent: '1',
+                    onPressFunc: () => ConsoleController.i.insertConsole('1'),
+                    typeButton: 'NUMS',
+                  ),
+                  CalculatorBaseButton(
+                    btnContent: '2',
+                    onPressFunc: () => ConsoleController.i.insertConsole('2'),
+                    typeButton: 'NUMS',
+                  ),
+                  CalculatorBaseButton(
+                    btnContent: '3',
+                    onPressFunc: () => ConsoleController.i.insertConsole('3'),
+                    typeButton: 'NUMS',
+                  ),
+                  CalculatorBaseButton(
                     btnContent: '+',
                     onPressFunc: () => setState(() {
                       ConsoleController.i.insertOperation('+');
@@ -146,43 +176,16 @@ class _CalculatorViewState extends State<CalculatorView> {
               ),
               Row(
                 children: [
-                  Column(
-                    children: [
-                      Row(
-                        children: [
-                          CalculatorBaseButton(
-                            btnContent: '1',
-                            onPressFunc: () => ConsoleController.i.insertConsole('1'),
-                            typeButton: 'NUMS',
-                          ),
-                          CalculatorBaseButton(
-                            btnContent: '2',
-                            onPressFunc: () => ConsoleController.i.insertConsole('2'),
-                            typeButton: 'NUMS',
-                          ),
-                          CalculatorBaseButton(
-                            btnContent: '3',
-                            onPressFunc: () => ConsoleController.i.insertConsole('3'),
-                            typeButton: 'NUMS',
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          CalculatorBaseButton(
-                            btnContent: '0',
-                            onPressFunc: () => ConsoleController.i.insertConsole('0'),
-                            typeButton: 'NUMS',
-                            btnFlexWidth: 2,
-                          ),
-                          CalculatorBaseButton(
-                            btnContent: '.',
-                            onPressFunc: () => ConsoleController.i.insertConsole('.'),
-                            typeButton: 'NUMS',
-                          ),
-                        ],
-                      ),
-                    ],
+                  CalculatorBaseButton(
+                    btnContent: '0',
+                    onPressFunc: () => ConsoleController.i.insertConsole('0'),
+                    typeButton: 'NUMS',
+                    btnFlexWidth: 2,
+                  ),
+                  CalculatorBaseButton(
+                    btnContent: '.',
+                    onPressFunc: () => ConsoleController.i.insertConsole('.'),
+                    typeButton: 'NUMS',
                   ),
                   CalculatorBaseButton(
                     btnContent: '=',
@@ -190,10 +193,9 @@ class _CalculatorViewState extends State<CalculatorView> {
                       ConsoleController.i.equalClick();
                     }),
                     typeButton: 'EQUAL',
-                    btnFlexHeight: 2,
                   ),
                 ],
-              )
+              ),
             ],
           )
         ],
