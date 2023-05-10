@@ -3,7 +3,7 @@ import 'package:calculadora_app/styles/text_styles.dart';
 import 'package:flutter/material.dart';
 
 class CalculatorBaseButton extends StatelessWidget {
-  final dynamic btnContent;
+  final Object btnContent;
   final double? btnFlexWidth;
   final double? btnFlexHeight;
   final VoidCallback onPressFunc;
@@ -54,11 +54,11 @@ class CalculatorBaseButton extends StatelessWidget {
         style: btnStyle,
         child: btnContent.runtimeType == String
             ? Text(
-                btnContent,
+                btnContent.toString(),
                 style: txtStyle,
               )
             : Icon(
-                btnContent,
+                btnContent as IconData?,
                 color: Colors.black54,
               ),
       ),
